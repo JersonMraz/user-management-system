@@ -8,6 +8,11 @@ const db = require('../helpers/db');
 const Role = require('../helpers/role');
 
 module.exports = {
+    authenticate,
+    refreshToken,
+    revokeToken,
+    register,
+    verifyEmail,
     forgotPassword,
     validateResetToken,
     resetPassword,
@@ -17,6 +22,139 @@ module.exports = {
     updateAccount,
     deleteAccount
 };
+
+
+async function authenticate({ email, password, ipAddress }) {
+    // Find the account in database, including the password hash (normally hidden)
+    const account = await db.Account.scope('withHash').findOne({ where: { email } });
+
+    // Check if: 
+    // 1. Account exists 
+    // 2. Account is verified 
+    // 3. Password matches the hash
+    // If any check fails, throw an error
+    if (!account || !account.isVerified || !(await bcrypt.compare(password, account.passwordHash))) {
+        throw 'Email or password is incorrect';
+    }
+
+    // If we get here, the login is successful!
+    
+    // 1. Create a short-lived JWT token (typically expires in 15-30 mins)
+    const jwtToken = generateJwtToken(account);
+    
+    // 2. Create a long-lived refresh token (typically expires in 7 days)
+    const refreshToken = generateRefreshToken(account, ipAddress);
+
+    // Save the refresh token in database so we can verify it later
+    await refreshToken.save();
+
+    // Return the account info plus both tokens to the client
+    return {
+        ...basicDetails(account),  // Basic account info (id, name, email, etc.)
+        jwtToken,                 // Short-lived access token
+        refreshToken: refreshToken.token  // Long-lived token for getting new access tokens
+    };
+}
+
+async function refreshToken({ token, ipAddress }) {
+    // 1. Find the existing refresh token in the database
+    const refreshToken = await getRefreshToken(token);
+    
+    // 2. Get the account associated with this refresh token
+    const account = await refreshToken.getAccount();
+
+    // Refresh token rotation - security best practice:
+    // a) Create a brand new refresh token
+    const newRefreshToken = generateRefreshToken(account, ipAddress);
+    
+    // b) Mark the old token as revoked (with timestamp and IP that revoked it)
+    refreshToken.revoked = Date.now();  // When it was revoked
+    refreshToken.revokedByIp = ipAddress;  // Which IP revoked it
+    refreshToken.replacedByToken = newRefreshToken.token;  // What token replaced it
+    
+    // c) Save both tokens to database
+    await refreshToken.save();
+    await newRefreshToken.save();
+
+    // 3. Generate a fresh JWT access token (short-lived)
+    const jwtToken = generateJwtToken(account);
+
+    // 4. Return the account info plus new tokens to client
+    return {
+        ...basicDetails(account),  // Basic account info (id, name, email, etc.)
+        jwtToken,                // New short-lived access token (typically 15-30 mins)
+        refreshToken: newRefreshToken.token  // New long-lived refresh token (typically 7 days)
+    };
+}
+
+async function revokeToken({ token, ipAddress }) {
+    // 1. Find the refresh token in the database using the provided token string
+    const refreshToken = await getRefreshToken(token);
+
+    // 2. Revoke the token by:
+    //    - Setting revocation timestamp (when it was revoked)
+    //    - Recording which IP address performed the revocation
+    refreshToken.revoked = Date.now();         // Current time in milliseconds since epoch
+    refreshToken.revokedByIp = ipAddress;      // IP address of the client revoking the token
+
+    // 3. Save the updated token to the database
+    //    This ensures the token can't be used again (it's now marked as revoked)
+    await refreshToken.save();
+
+    // Note: No return value needed - this is a "fire and forget" operation
+    // The client will know revocation succeeded if this doesn't throw an error
+}
+
+async function register(params, origin) {
+    // Check if email is already registered (prevent duplicate accounts)
+    if (await db.Account.findOne({ where: { email: params.email } })) {
+        // Security measure: Instead of showing an error, send an email
+        return await sendAlreadyRegisteredEmail(params.email, origin);
+    }
+
+    // Create new account with user's registration data
+    const account = new db.Account(params);
+    
+    // Special rule: First user becomes admin, others get user role
+    // This ensures the system always has at least one admin account
+    const isFirstAccount = (await db.Account.count()) === 0;
+    account.role = isFirstAccount ? Role.Admin : Role.User;
+    
+    // Generate a secure random token for email verification
+    account.verificationToken = randomTokenString();
+    
+    // Important security step: Hash the password before storing
+    // Never store passwords in plain text!
+    account.passwordHash = await hash(params.password);
+    
+    // Save the new account to the database
+    await account.save();
+    
+    // Send verification email with confirmation link
+    await sendVerificationEmail(account, origin);
+}
+
+async function verifyEmail({ token }) {
+    // Find account with matching verification token
+    // (This token was sent to the user's email during registration)
+    const account = await db.Account.findOne({ where: { verificationToken: token } });
+    
+    // If no account found with this token, verification fails
+    // (Token might be invalid or expired)
+    if (!account) throw 'Verification failed';
+    
+    // Mark account as verified by:
+    // 1. Setting verification timestamp (when email was confirmed)
+    account.verified = Date.now();
+    // 2. Clearing the verification token (it can't be used again)
+    account.verificationToken = null;
+    
+    // Save the updated account status to database
+    await account.save();
+    
+    // Note: No return value needed - frontend should show success message
+    // if this completes without throwing an error
+}
 
 async function forgotPassword({ email }, origin) {
     const account = await db.Account.findOne({ where: { email } });
