@@ -8,6 +8,10 @@ const accountService = require('./account.service');
 
 // routes
 router.post('/authenticate', authenticateSchema, authenticate);
+router.post('/refresh-token', refreshToken);
+router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
+router.post('/register', registerSchema, register);
+router.post('/verify-email', verifyEmailSchema, verifyEmail);
 router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
 router.post('/reset-password', resetPasswordSchema, resetPassword);
@@ -39,6 +43,133 @@ function authenticate(req, res, next) {
             });
         })
         .catch(next);
+}
+
+function refreshToken(req, res, next) {
+    // 1. Get refresh token from HTTP-only cookie (secure storage)
+    const token = req.cookies.refreshToken;
+    
+    // 2. Get client's IP address for security tracking
+    const ipAddress = req.ip;
+    
+    // 3. Call account service to handle the token refresh logic
+    accountService.refreshToken({ token, ipAddress })
+        .then(({ refreshToken, ...account }) => {
+            // 4. On success:
+            //    - Set new refresh token in HTTP-only cookie
+            //    - Return account data with new access token
+            setTokenCookie(res, refreshToken);
+            res.json(account);
+        })
+        .catch(next); // 5. Forward any errors to error handler
+}
+
+function revokeTokenSchema(req, res, next) {
+    // Define validation schema:
+    // - token: Optional string that can be empty
+    const schema = Joi.object({
+        token: Joi.string().empty('')
+    });
+
+    // Validate the request against the schema
+    // - Proceeds to next middleware if valid
+    // - Automatically handles errors if invalid
+    validateRequest(req, next, schema);
+}
+
+function revokeToken(req, res, next) {
+    // 1. Get token from either request body or HTTP-only cookie
+    //    (Provides flexibility in how clients can send the token)
+    const token = req.body.token || req.cookies.refreshToken;
+    
+    // 2. Get client's IP address for security logging
+    const ipAddress = req.ip;
+
+    // 3. Validate token exists
+    if (!token) {
+        return res.status(400).json({ message: 'Token is required' });
+    }
+
+    // 4. Authorization check:
+    //    - Users can only revoke their own tokens
+    //    - Admins can revoke any tokens
+    if (!req.user.ownsToken(token) && req.user.role !== Role.Admin) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // 5. Call account service to perform revocation
+    accountService.revokeToken({ token, ipAddress })
+        .then(() => {
+            // Success response
+            res.json({ message: 'Token revoked' });
+        })
+        .catch(next); // Forward errors to error handler
+}
+function registerSchema(req, res, next) {
+    // Define validation rules for registration fields:
+    const schema = Joi.object({
+        // Personal information
+        title: Joi.string().required(),                 // Required string (Mr, Mrs, etc.)
+        firstName: Joi.string().required(),            // Required string
+        lastName: Joi.string().required(),             // Required string
+        
+        // Account credentials
+        email: Joi.string().email().required(),        // Must be valid email format
+        password: Joi.string().min(6).required(),      // Minimum 6 characters
+        confirmPassword: Joi.string()                  // Must match 'password' field
+            .valid(Joi.ref('password')).required(),    // and is required
+        
+        // Legal requirement
+        acceptTerms: Joi.boolean()                     // Must be exactly true
+            .valid(true).required()                    // and is required
+    });
+
+    // Validate the request body against the schema
+    // - Proceeds to next middleware if validation passes
+    // - Automatically returns 400 error if validation fails
+    validateRequest(req, next, schema);
+}
+
+function register(req, res, next) {
+    // Call the account service to handle registration:
+    // 1. Passes the registration data from request body
+    // 2. Includes the origin URL (for email verification links)
+    accountService.register(req.body, req.get('origin'))
+        .then(() => {
+            // On successful registration:
+            // - Return success message
+            // - Don't return sensitive data
+            res.json({ 
+                message: 'Registration successful, please check your email for verification instructions' 
+            });
+        })
+        .catch(next); // Forward any errors to the error handler
+}
+
+function verifyEmailSchema(req, res, next) {
+    // Define validation schema for email verification:
+    // - token: Required string (the verification token sent to user's email)
+    const schema = Joi.object({
+        token: Joi.string().required()
+    });
+
+    // Validate the request against the schema
+    // - Continues to next middleware if valid
+    // - Returns 400 error if token is missing/invalid
+    validateRequest(req, next, schema);
+}
+
+function verifyEmail(req, res, next) {
+    // Call account service to verify the email using the token from request body
+    accountService.verifyEmail(req.body)
+        .then(() => {
+            // On successful verification:
+            // Return success message indicating user can now login
+            res.json({ 
+                message: 'Verification successful, you can now login' 
+            });
+        })
+        .catch(next); // Forward any errors to the error handler
 }
 
 function forgotPasswordSchema(req, res, next) {
