@@ -1,97 +1,61 @@
-# User Management System
+# Node.js + MySQL Backend System
 
-## Overview
-This is a Node.js and MySQL-based User Management System API that provides complete user authentication functionality including:
+## Introduction
 
-- User registration with email verification
-- Authentication with JWT tokens and refresh tokens
-- Password reset via email
-- User account management (CRUD operations)
-- Role-based authorization
-- Secure API endpoints with JWT middleware
+This backend system is built with **Node.js** and **MySQL**, providing a secure and scalable foundation for user authentication, authorization, and account management. It is designed for applications that require verified user registration, role-based access control, and administrative tools for managing users. The architecture adheres to modern best practices for API security and maintainability.
 
-The system uses Express.js as the web framework, Sequelize as the ORM for MySQL database interactions, and includes Swagger documentation for API endpoints.
+---
+
+## Features
+
+### Email Sign-Up and Verification
+- Users can register using their email address.
+- A verification email is sent to confirm and activate the account.
+
+### JWT Authentication with Refresh Tokens
+- Secure login with **JSON Web Tokens (JWT)**.
+- Short-lived access tokens and long-lived refresh tokens for seamless session management.
+
+### Role-Based Authorization
+- Two primary user roles:
+  - **Admin**: Full access to all features.
+  - **User**: Limited access to assigned resources.
+- Route protection ensures only authorized roles can access specific endpoints.
+
+### Password Recovery and Reset
+- **Forgot Password**: Users can request a secure password reset link via email.
+- **Reset Password**: Password updates are handled using time-limited tokens.
+
+### Admin-Only Account Management (CRUD)
+- Admin users can:
+  - **Create** new user accounts.
+  - **Read** and list user details.
+  - **Update** account information.
+  - **Delete** user accounts.
+
+---
 
 ## Technologies Used
-- Node.js
-- Express.js
-- MySQL
-- Sequelize ORM
-- JWT Authentication
-- Nodemailer for email services
-- Swagger for API documentation
 
-## Prerequisites
-- Node.js (v12 or higher)
-- MySQL Server
-- Git
+- **Node.js** (Express.js)
+- **MySQL** (with MySQL2 or Sequelize ORM)
+- **JWT** for authentication
+- **Nodemailer** for email communication
+- **dotenv** for environment variable management
+- **bcrypt** for password hashing
+---
 
-## Installation
+## Setup & Installation
 
-1. Clone the repository:
-```
-git clone <repository-url>
-cd Backend
-```
+```bash
+# Clone the repository
+git https://github.com/JersonMraz/user-management-system.git
+cd user-management-system.git
 
-2. Install dependencies:
-```
-npm install
-```
+# Install dependencies
+npm install bcryptjs body-parser cookie-parser cors express \
+express-jwt joi jsonwebtoken mysql2 nodemailer sequelize \
+swagger-ui-express yamljs
 
-3. Configure the database:
-   - Create a MySQL database named `node-mysql-signup-verification-api`
-   - Update the database configuration in `config.json` if needed
-
-4. Configure email settings:
-   - Update the SMTP configuration in `config.json` for sending verification emails
-
-## Running the Application
-
-### Development Mode
-```
-npm run start:dev
-```
-This starts the server with nodemon for automatic reloading during development.
-
-### Production Mode
-```
-npm start
-```
-The server will run on port 4000 by default in development mode, or port 80 in production mode.
-
-## API Documentation
-Once the server is running, you can access the Swagger API documentation at:
-```
-http://localhost:4000/api-docs
-```
-
-## API Endpoints
-
-### Authentication
-- POST `/accounts/authenticate` - Authenticate user credentials
-- POST `/accounts/refresh-token` - Refresh JWT token
-- POST `/accounts/revoke-token` - Revoke a refresh token
-
-### Account Management
-- POST `/accounts/register` - Register a new account
-- POST `/accounts/verify-email` - Verify email address
-- POST `/accounts/forgot-password` - Send password reset email
-- POST `/accounts/reset-password` - Reset password
-- GET `/accounts` - Get all accounts (admin only)
-- GET `/accounts/{id}` - Get account by ID
-- POST `/accounts` - Create a new account (admin only)
-- PUT `/accounts/{id}` - Update an account
-- DELETE `/accounts/{id}` - Delete an account
-
-## Security Notes
-- JWT tokens are used for API authentication
-- Passwords are hashed using bcrypt
-- Email verification is required before login
-- Refresh tokens are stored in HTTP-only cookies
-
-## Developer
-This project was developed by Clifford Alferez and Jerson Sullano
-
-## License
-This project is licensed under the MIT License.
+# Run the application
+npm run dev

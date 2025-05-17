@@ -6,8 +6,17 @@
   "scripts": {
     "start": "node ./server.js",
     "start:dev": "nodemon ./server.js"
+  "name": "node-mysql-signup-verification-api",
+  "version": "1.0.0",
+  "description": "NodeJS and MySQL API for Email Sign Up with Verification, Authentication & Forgot Password",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./server.js",
+    "start:dev": "nodemon ./server.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
@@ -21,7 +30,11 @@
     "rootpath": "^0.1.2",
     "sequelize": "^6.37.7",
     "swagger-ui-express": "^4.6.3",
+    "swagger-ui-express": "^4.6.3",
     "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.3"
