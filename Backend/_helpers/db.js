@@ -18,10 +18,17 @@ async function initialize() {
     // init models and add them to the exported db object
     db.Account = require('../accounts/account.model')(sequelize);
     db.RefreshToken = require('../accounts/refresh-token.model')(sequelize);
+    db.Department = require('../departments/department.model')(sequelize);
+    db.Employee = require('../employees/employee.model')(sequelize);
   
     // define relationship
     db.Account.hasMany(db.RefreshToken, { onDelete: 'CASCADE' });
     db.RefreshToken.belongsTo(db.Account);
+    db.Employee.belongsTo(db.Account, { foreignKey: 'accountId' });
+
+    // employee to department
+    db.Department.hasMany(db.Employee, { foreignKey: 'departmentId'});
+    db.Employee.belongsTo(db.Department, { foreignKey: 'departmentId', as: 'department' });
   
     // sync all models with database
     await sequelize.sync({ alter: true });

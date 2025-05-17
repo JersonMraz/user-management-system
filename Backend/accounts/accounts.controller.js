@@ -1,12 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
-const validateRequest = require('_middleware/validate-request');
 const authorize = require('_middleware/authorize')
 const Role = require('_helpers/role');
 const validateRequest = require('_middleware/validate-request');
-const authorize = require('_middleware/authorize')
-const Role = require('_helpers/role');
 const accountService = require('./account.service');
 
 // routes
@@ -214,6 +211,7 @@ function updateSchema(req, res, next) {
 
     const schema = Joi.object(schemaRules).with('password', 'confirmPassword');
     validateRequest(req, next, schema);
+    }
 }
 
 function update(req, res, next) {
@@ -227,7 +225,6 @@ function update(req, res, next) {
         .catch(next);
 }
 
-function _delete(req, res, next) {
 function _delete(req, res, next) {
     // users can delete their own account and admins can delete any account
     if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin)
@@ -248,7 +245,6 @@ function setTokenCookie(res, token) {
     // create cookie with refresh token that expires in 7 days
     const cookieOptions = {
         httpOnly: true,
-        expires: new Date(Date.now() + 7*24*60*60*1000)
         expires: new Date(Date.now() + 7*24*60*60*1000)
     };
     res.cookie('refreshToken', token, cookieOptions);
