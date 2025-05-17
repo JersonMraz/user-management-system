@@ -91,7 +91,7 @@ http://localhost:4000/api-docs
 - Refresh tokens are stored in HTTP-only cookies
 
 ## Developer
-This project was developed by [Your Name]
+This project was developed by Clifford Alferez and Jerson Sullano
 
 ## License
 This project is licensed under the MIT License.
