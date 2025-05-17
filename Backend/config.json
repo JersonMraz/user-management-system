@@ -3,7 +3,7 @@
       "host": "localhost",
       "port": 3306,
       "user": "root",
-      "password": "admin",
+      "password": "",
       "database": "node-mysql-signup-verification-api"
     },
     "secret": "THIS IS USED TO SIGN AND VERIFY JWT TOKENS, REPLACE IT WITH YOUR OWN SECRET, IT CAN BE ANY STRING",
