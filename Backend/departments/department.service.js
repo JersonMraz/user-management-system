@@ -1,6 +1,6 @@
-const config = require('config.json');
+const config = require('../config.json');
 const { Op } = require('sequelize');
-const db = require('_helper/db');
+const db = require('../_helpers/db');
 const { get } = require('http');
 
 module.exports = {

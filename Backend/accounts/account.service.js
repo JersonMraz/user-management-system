@@ -6,9 +6,6 @@ const { Op } = require('sequelize');
 const sendEmail = require('_helpers/send-email');
 const db = require('_helpers/db');
 const Role = require('_helpers/role');
-const sendEmail = require('_helpers/send-email');
-const db = require('_helpers/db');
-const Role = require('_helpers/role');
 
 module.exports = {
   authenticate,
@@ -155,7 +152,6 @@ async function resetPassword({ token, password }) {
     const account = await validateResetToken({ token });
 
     // update password and remove reset token
-    // update password and remove reset token
     account.passwordHash = await hash(password);
     account.passwordReset = Date.now();
     account.resetToken = null;
@@ -173,7 +169,6 @@ async function getById(id) {
     return basicDetails(account);
 }
 
-async function create(params) {
 async function create(params) {
     // validate
     if (await db.Account.findOne({ where: { email: params.email } })) {
@@ -195,7 +190,6 @@ async function create(params) {
     return basicDetails(account);
 }
 
-async function update(id, params) {
 async function update(id, params) {
     const account = await getAccount(id);
 
@@ -219,7 +213,6 @@ async function update(id, params) {
     return basicDetails(account);
 }
 
-async function _delete(id) {
 async function _delete(id) {
     const account = await getAccount(id);
     await account.destroy();
@@ -279,7 +272,6 @@ async function sendVerificationEmail(account, origin) {
                    <p><a href="${verifyUrl}'">${verifyUrl}</a></p>`;
     } else {
         message = `<p>Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
-        message = `<p>Please use the below token to verify your email address with the <code>/account/verify-email</code> api route:</p>
                    <p><code>${account.verificationToken}</code></p>`;
     }
 
@@ -309,6 +301,7 @@ async function sendAlreadyRegisteredEmail(email, origin) {
                ${message}`
     });
 }
+
 async function sendAlreadyRegisteredEmail(email, origin) {
     let message;
     if (origin) {
@@ -330,10 +323,8 @@ async function sendPasswordResetEmail(account, origin) {
     if (origin) {
         const resetUrl = `${origin}/account/reset-password?token=${account.resetToken}`;
         message = `<p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
-        message = `<p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
                    <p><a href="${resetUrl}">${resetUrl}</a></p>`;
     } else {
-        message = `<p>Please use the below token to reset your password with the <code>/account/reset-password</code> api route:</p>
         message = `<p>Please use the below token to reset your password with the <code>/account/reset-password</code> api route:</p>
                    <p><code>${account.resetToken}</code></p>`;
     }
@@ -342,7 +333,6 @@ async function sendPasswordResetEmail(account, origin) {
     await sendEmail({
         to: account.email,
         subject: 'Sign-up Verification API - Reset Password',
-        html: `<h4>Reset Password Email</h4>
         html: `<h4>Reset Password Email</h4>
                ${message}`
     });
