@@ -2,7 +2,7 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 export const environment = {
     production: false,
-    apiUrl: 'https://alferez-dbhelper.onrender.com'
+    apiUrl: 'https://user-management-system-7bwe.onrender.com'
   };
   
   

@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
-    apiUrl: 'https://alferez-dbhelper.onrender.com'
+    apiUrl: 'https://user-management-system-7bwe.onrender.com'
   };
   
