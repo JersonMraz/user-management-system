@@ -2,7 +2,7 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 export const environment = {
     production: false,
-    apiUrl: 'http://localhost:4000'
+    apiUrl: 'https://sullano-dbhelper.onrender.com'
   };
   
   
