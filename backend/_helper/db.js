@@ -20,8 +20,8 @@ async function initialize() {
     // Now connect to the database with additional configuration
     const sequelize = new Sequelize(database, user, password, { 
         dialect: 'mysql',
-        host: host,
-        port: port,
+                  host: host,
+                  port : port,
         dialectOptions: {
             dateStrings: true,
             typeCast: true
@@ -56,10 +56,12 @@ async function initialize() {
     db.Employee.hasMany(db.Request, { foreignKey: 'employeeId', as: 'Requests' });
     
     // RequestItem associations
-    db.Request.hasMany(db.RequestItem, { foreignKey: 'requestId', as: 'RequestItems', onDelete: 'CASCADE' });
+    db.Request.hasMany(db.RequestItem, {  foreignKey: 'requestId',  as: 'RequestItems',onDelete: 'CASCADE' });
     db.RequestItem.belongsTo(db.Request, { foreignKey: 'requestId', as: 'Request' });
 
     db.RefreshToken.belongsTo(db.Account);
+
+  
 
     // Sync all models with the database (alter tables to match model changes)
     await sequelize.sync({ alter: true });

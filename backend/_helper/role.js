@@ -1,4 +1,4 @@
-module.exports =  {
+module.exports = {
     Admin: 'Admin',
     User: 'User'
 }

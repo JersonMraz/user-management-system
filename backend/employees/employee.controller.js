@@ -6,7 +6,7 @@ const employeeService = require('./employee.service');
 
 const authorize = require('_middleware/authorize');
 const validateRequest = require('_middleware/validate-request');
-const Role = require('../_helpers/role');
+const Role = require('_helper/role');
 
 // Routes
 router.get('/', authorize(Role.Admin), getAll);

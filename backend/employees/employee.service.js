@@ -1,6 +1,6 @@
 const config = require('config.json');
 const { Op } = require('sequelize');
-const db = require('../_helpers/db');
+const db = require('_helper/db');
 const { get } = require('http');
 
 
@@ -214,3 +214,6 @@ async function transferEmployee(employeeId, newDepartmentId) {
     
     return updatedEmployee;
 }
+
+
+
